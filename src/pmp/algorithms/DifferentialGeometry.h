@@ -75,7 +75,7 @@ Point centroid(const SurfaceMesh& mesh);
 //! \details The vertex positions of the dual mesh are the centroids
 //! of the primal input mesh.
 //! \warning Changes the mesh in place. All properties are cleared.
-void dualize(SurfaceMesh& mesh);
+void dual(SurfaceMesh& mesh);
 
 //! compute the cotangent weight for edge e
 double cotan_weight(const SurfaceMesh& mesh, Edge e);

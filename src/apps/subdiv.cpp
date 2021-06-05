@@ -56,15 +56,31 @@ void Viewer::process_imgui()
 
         if (ImGui::Button("Loop Subdivision"))
         {
-            SurfaceSubdivision(mesh_).loop();
+            try
+            {
+                SurfaceSubdivision(mesh_).loop();
+            }
+            catch (const InvalidInputException& e)
+            {
+                std::cerr << e.what() << std::endl;
+                return;
+            }
             update_mesh();
         }
 
-        //if (ImGui::Button("Sqrt(3) Subdivision"))
-        //{
-        //SurfaceSubdivision(mesh_).sqrt3();
-        //update_mesh();
-        //}
+        if (ImGui::Button("Sqrt(3) Subdivision"))
+        {
+            try
+            {
+                SurfaceSubdivision(mesh_).sqrt3();
+            }
+            catch (const InvalidInputException& e)
+            {
+                std::cerr << e.what() << std::endl;
+                return;
+            }
+            update_mesh();
+        }
 
         if (ImGui::Button("Catmull-Clark Subdivision"))
         {

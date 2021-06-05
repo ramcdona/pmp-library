@@ -12,7 +12,9 @@ This project aims to adhere to [Semantic Versioning](https://semver.org/spec/v2.
 
 - Integrate polygon laplacian code
 - Add support to read non-manifold meshes by duplicating vertices
-- Add SurfacePrimitives class to generate basic shapes.
+- Add SurfaceFactory class to generate basic shapes. Thanks to
+  [u/lycium](https://www.reddit.com/user/lycium/) on Reddit for suggesting a
+  simplification of the `icosahedron()` function.
 - Add support to render colors per face
 - Add support to render colors per vertex, thanks to Xiewei Zhong
 - Add function to compute volume of a mesh, thanks to Xiewei Zhong
@@ -25,16 +27,20 @@ This project aims to adhere to [Semantic Versioning](https://semver.org/spec/v2.
 
 ### Changed
 
+- MeshViewer::load_mesh() again returns boolean success value.
 - Improve API by reporting errors using exceptions (see #16).
 - SurfaceFeatures now returns the number of boundary / feature edges detected.
-- Update Eigen to version 3.3.9
+- Update Eigen to version 3.4.0-rc1
 - Update googletest to version 1.10.0
 - Update stb_image to version 2.26 and stb_image_writer to version 1.15.
 - Update GLFW to branch 3.3-stable to fix keyboard input on Linux.
+- Change CMake policy CMP0072 to "NEW" behavior preferring GLVND
 
 ### Fixed
 
+- Fix bug in hole filling leading to artifacts in the filled surface patch. See #64.
 - Change sign of vec2::perp() to correctly model CCW rotation by 90 degrees.
+- Fix bug in OpenGL buffer clean-up in SurfaceMeshGL.
 
 ## [1.2.1] 2020-05-10
 

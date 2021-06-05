@@ -1,4 +1,4 @@
-// Copyright 2011-2020 the Polygon Mesh Processing Library developers.
+// Copyright 2011-2021 the Polygon Mesh Processing Library developers.
 // Distributed under a MIT-style license, see LICENSE.txt for details.
 
 #include "pmp/visualization/SurfaceMeshGL.h"
@@ -42,6 +42,7 @@ SurfaceMeshGL::SurfaceMeshGL()
     srgb_ = false;
     use_colors_ = true;
     crease_angle_ = 180.0;
+    point_size_ = 5.0;
 
     // initialize texture
     texture_ = 0;
@@ -49,6 +50,11 @@ SurfaceMeshGL::SurfaceMeshGL()
 }
 
 SurfaceMeshGL::~SurfaceMeshGL()
+{
+    deleteBuffers();
+}
+
+void SurfaceMeshGL::deleteBuffers()
 {
     // delete OpenGL buffers
     glDeleteBuffers(1, &vertex_buffer_);
@@ -58,10 +64,32 @@ SurfaceMeshGL::~SurfaceMeshGL()
     glDeleteBuffers(1, &edge_buffer_);
     glDeleteBuffers(1, &feature_buffer_);
     glDeleteVertexArrays(1, &vertex_array_object_);
-    glDeleteTextures(1, &texture_);
+
+    // initialize GL buffers to zero
+    vertex_array_object_ = 0;
+    vertex_buffer_ = 0;
+    color_buffer_ = 0;
+    normal_buffer_ = 0;
+    tex_coord_buffer_ = 0;
+    edge_buffer_ = 0;
+    feature_buffer_ = 0;
+
+    // initialize buffer sizes
+    n_vertices_ = 0;
+    n_edges_ = 0;
+    n_triangles_ = 0;
+    n_features_ = 0;
+    has_texcoords_ = false;
+    has_vertex_colors_ = false;
 }
 
-bool SurfaceMeshGL::load_texture(const char* filename, GLint format,
+void SurfaceMeshGL::clear()
+{
+    deleteBuffers();
+    SurfaceMesh::clear();
+}
+
+void SurfaceMeshGL::load_texture(const char* filename, GLint format,
                                  GLint min_filter, GLint mag_filter, GLint wrap)
 {
 #ifdef __EMSCRIPTEN__
@@ -102,7 +130,8 @@ bool SurfaceMeshGL::load_texture(const char* filename, GLint format,
     unsigned char* img =
         stbi_load(filename, &width, &height, &n, loadComponents);
     if (!img)
-        return false;
+        throw IOException("Failed to load texture file: " +
+                          std::string(filename));
 
     // delete old texture
     glDeleteTextures(1, &texture_);
@@ -136,17 +165,19 @@ bool SurfaceMeshGL::load_texture(const char* filename, GLint format,
     stbi_image_free(img);
 
     texture_mode_ = OtherTexture;
-    return true;
 }
 
-bool SurfaceMeshGL::load_matcap(const char* filename)
+void SurfaceMeshGL::load_matcap(const char* filename)
 {
-    if (!load_texture(filename, GL_RGBA, GL_LINEAR, GL_LINEAR,
-                      GL_CLAMP_TO_EDGE))
-        return false;
-
+    try
+    {
+        load_texture(filename, GL_RGBA, GL_LINEAR, GL_LINEAR, GL_CLAMP_TO_EDGE);
+    }
+    catch (const IOException&)
+    {
+        throw;
+    }
     texture_mode_ = MatCapTexture;
-    return true;
 }
 
 void SurfaceMeshGL::use_cold_warm_texture()
@@ -443,7 +474,10 @@ void SurfaceMeshGL::update_opengl_buffers()
         n_vertices_ = position_array.size();
     }
     else
+    {
+        glDisableVertexAttribArray(0);
         n_vertices_ = 0;
+    }
 
     // upload normals
     if (!normal_array.empty())
@@ -453,6 +487,10 @@ void SurfaceMeshGL::update_opengl_buffers()
                      normal_array.data(), GL_STATIC_DRAW);
         glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
         glEnableVertexAttribArray(1);
+    }
+    else
+    {
+        glDisableVertexAttribArray(1);
     }
 
     // upload texture coordinates
@@ -466,7 +504,10 @@ void SurfaceMeshGL::update_opengl_buffers()
         has_texcoords_ = true;
     }
     else
+    {
+        glDisableVertexAttribArray(2);
         has_texcoords_ = false;
+    }
 
     // upload colors of vertices
     if (!color_array.empty())
@@ -479,7 +520,10 @@ void SurfaceMeshGL::update_opengl_buffers()
         has_vertex_colors_ = true;
     }
     else
+    {
+        glDisableVertexAttribArray(3);
         has_vertex_colors_ = false;
+    }
 
     // edge indices
     if (n_edges())
@@ -524,7 +568,7 @@ void SurfaceMeshGL::update_opengl_buffers()
     else
         n_features_ = 0;
 
-    // unbind vertex arry
+    // unbind vertex array
     glBindVertexArray(0);
 
     // remove vertex index property again
@@ -578,7 +622,7 @@ void SurfaceMeshGL::draw(const mat4& projection_matrix,
     phong_shader_.set_uniform("modelview_projection_matrix", mvp_matrix);
     phong_shader_.set_uniform("modelview_matrix", mv_matrix);
     phong_shader_.set_uniform("normal_matrix", n_matrix);
-    phong_shader_.set_uniform("point_size", 5.0f);
+    phong_shader_.set_uniform("point_size", (float)point_size_);
     phong_shader_.set_uniform("light1", vec3(1.0, 1.0, 1.0));
     phong_shader_.set_uniform("light2", vec3(-1.0, 1.0, 1.0));
     phong_shader_.set_uniform("front_color", front_color_);
@@ -592,7 +636,7 @@ void SurfaceMeshGL::draw(const mat4& projection_matrix,
     phong_shader_.set_uniform("use_texture", false);
     phong_shader_.set_uniform("use_srgb", false);
     phong_shader_.set_uniform("show_texture_layout", false);
-    phong_shader_.set_uniform("use_vertex_color", has_vertex_colors_);
+    phong_shader_.set_uniform("use_vertex_color", has_vertex_colors_ && use_colors_);
 
     glBindVertexArray(vertex_array_object_);
 

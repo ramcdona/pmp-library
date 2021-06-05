@@ -1,8 +1,8 @@
-
 // Copyright 2011-2019 the Polygon Mesh Processing Library developers.
 // Distributed under a MIT-style license, see LICENSE.txt for details.
 
 #include "SurfaceMeshTest.h"
+#include "Helpers.h"
 
 #include <pmp/algorithms/SurfaceNormals.h>
 #include <vector>
@@ -79,7 +79,7 @@ TEST_F(SurfaceMeshTest, insert_remove_single_polygonal_face)
 
 TEST_F(SurfaceMeshTest, delete_center_vertex)
 {
-    ASSERT_TRUE(mesh.read("pmp-data/off/vertex_onering.off"));
+    mesh = vertex_onering();
     EXPECT_EQ(mesh.n_vertices(), size_t(7));
     EXPECT_EQ(mesh.n_faces(), size_t(6));
     Vertex v0(3); // the central vertex
@@ -91,7 +91,7 @@ TEST_F(SurfaceMeshTest, delete_center_vertex)
 
 TEST_F(SurfaceMeshTest, delete_center_edge)
 {
-    ASSERT_TRUE(mesh.read("pmp-data/off/edge_onering.off"));
+    mesh = edge_onering();
     EXPECT_EQ(mesh.n_vertices(), size_t(10));
     EXPECT_EQ(mesh.n_faces(), size_t(10));
     // the two vertices of the center edge
@@ -345,7 +345,7 @@ TEST_F(SurfaceMeshTest, edge_split)
 
 TEST_F(SurfaceMeshTest, edge_flip)
 {
-    mesh.read("pmp-data/off/edge_onering.off");
+    mesh = edge_onering();
     EXPECT_EQ(mesh.n_vertices(), size_t(10));
     EXPECT_EQ(mesh.n_faces(), size_t(10));
 
@@ -361,7 +361,7 @@ TEST_F(SurfaceMeshTest, edge_flip)
 
 TEST_F(SurfaceMeshTest, is_manifold)
 {
-    mesh.read("pmp-data/off/vertex_onering.off");
+    mesh = vertex_onering();
     for (auto v : mesh.vertices())
         EXPECT_TRUE(mesh.is_manifold(v));
 }
@@ -375,9 +375,7 @@ TEST_F(SurfaceMeshTest, edge_length)
         sum += mesh.edge_length(e);
     }
     sum /= (Scalar)mesh.n_edges();
-    //EXPECT_FLOAT_EQ(sum,0.52385628);
-
-    std::cerr << "sum: " << sum << std::endl;
+    EXPECT_FLOAT_EQ(sum, 1.0);
 }
 
 TEST_F(SurfaceMeshTest, property_stats)

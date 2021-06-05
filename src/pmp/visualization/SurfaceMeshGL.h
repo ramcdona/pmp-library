@@ -1,4 +1,4 @@
-// Copyright 2011-2020 the Polygon Mesh Processing Library developers.
+// Copyright 2011-2021 the Polygon Mesh Processing Library developers.
 // Distributed under a MIT-style license, see LICENSE.txt for details.
 
 #pragma once
@@ -22,6 +22,9 @@ public:
 
     //! default destructor
     ~SurfaceMeshGL();
+
+    //! clear mesh: remove all vertices, edges, faces, free OpenGL buffers
+    virtual void clear() override;
 
     //! get front color
     const vec3& front_color() const { return front_color_; }
@@ -63,6 +66,11 @@ public:
     //! set crease angle (in degrees) for visualization of sharp edges
     void set_crease_angle(Scalar ca);
 
+    //! get point size for visualization of points
+    float point_size() const { return point_size_; }
+    //! set point size for visualization of points
+    void set_point_size(float ps){point_size_ = ps;}
+
     //! \brief Control usage of color information
     //! \details Either per-vertex or per-face colors can be used. Vertex colors
     //! are only used if the mesh has a per-vertex property of type Color
@@ -91,7 +99,8 @@ public:
     //! \param min_filter interpolation filter for minification
     //! \param mag_filter interpolation filter for magnification
     //! \param wrap texture coordinates wrap preference
-    bool load_texture(const char* filename, GLint format = GL_RGB,
+    //! \throw IOException in case of failure to load texture from file
+    void load_texture(const char* filename, GLint format = GL_RGB,
                       GLint min_filter = GL_LINEAR_MIPMAP_LINEAR,
                       GLint mag_filter = GL_LINEAR,
                       GLint wrap = GL_CLAMP_TO_EDGE);
@@ -101,7 +110,13 @@ public:
     //! that you cannot have texture and mat-cap at the same time.
     //! \param filename the location and name of the texture
     //! \sa See src/apps/mview.cpp for an example usage.
-    bool load_matcap(const char* filename);
+    //! \throw IOException in case of failure to load texture from file
+    void load_matcap(const char* filename);
+
+private: // init/clear buffers and properties
+
+    // delete OpenGL buffers (called from destructor and clear())
+    void deleteBuffers();
 
 private: // helpers for computing triangulation of a polygon
     struct Triangulation
@@ -173,6 +188,7 @@ private:
     bool srgb_;
     bool use_colors_;
     float crease_angle_;
+    int point_size_;
 
     //! 1D texture for scalar field rendering
     GLuint texture_;

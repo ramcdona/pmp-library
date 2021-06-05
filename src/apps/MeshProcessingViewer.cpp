@@ -1,4 +1,4 @@
-// Copyright 2011-2020 the Polygon Mesh Processing Library developers.
+// Copyright 2011-2021 the Polygon Mesh Processing Library developers.
 // Distributed under a MIT-style license, see LICENSE.txt for details.
 
 #include "MeshProcessingViewer.h"
@@ -11,7 +11,8 @@
 #include <pmp/algorithms/SurfaceCurvature.h>
 #include <pmp/algorithms/SurfaceGeodesic.h>
 #include <pmp/algorithms/SurfaceHoleFilling.h>
-#include <pmp/algorithms/SurfacePrimitives.h>
+#include <pmp/algorithms/SurfaceFactory.h>
+#include <pmp/algorithms/DifferentialGeometry.h>
 
 #include <imgui.h>
 
@@ -33,6 +34,12 @@ void MeshProcessingViewer::keyboard(int key, int scancode, int action, int mods)
 
     switch (key)
     {
+        case GLFW_KEY_D: // dualize mesh
+        {
+            dual(mesh_);
+            update_mesh();
+            break;
+        }
         case GLFW_KEY_O: // change face orientation
         {
             SurfaceMeshGL new_mesh;
@@ -88,32 +95,36 @@ void MeshProcessingViewer::keyboard(int key, int scancode, int action, int mods)
         case GLFW_KEY_6:
         case GLFW_KEY_7:
         case GLFW_KEY_8:
+        case GLFW_KEY_9:
         {
             switch (key)
             {
                 case GLFW_KEY_1:
-                    mesh_.assign(tetrahedron());
+                    mesh_.assign(SurfaceFactory::tetrahedron());
                     break;
                 case GLFW_KEY_2:
-                    mesh_.assign(octahedron());
+                    mesh_.assign(SurfaceFactory::octahedron());
                     break;
                 case GLFW_KEY_3:
-                    mesh_.assign(hexahedron());
+                    mesh_.assign(SurfaceFactory::hexahedron());
                     break;
                 case GLFW_KEY_4:
-                    mesh_.assign(icosahedron());
+                    mesh_.assign(SurfaceFactory::icosahedron());
                     break;
                 case GLFW_KEY_5:
-                    mesh_.assign(dodecahedron());
+                    mesh_.assign(SurfaceFactory::dodecahedron());
                     break;
                 case GLFW_KEY_6:
-                    mesh_.assign(icosphere(3));
+                    mesh_.assign(SurfaceFactory::icosphere(3));
                     break;
                 case GLFW_KEY_7:
-                    mesh_.assign(quad_sphere(3));
+                    mesh_.assign(SurfaceFactory::quad_sphere(3));
                     break;
                 case GLFW_KEY_8:
-                    mesh_.assign(uv_sphere());
+                    mesh_.assign(SurfaceFactory::uv_sphere());
+                    break;
+                case GLFW_KEY_9:
+                    mesh_.assign(SurfaceFactory::torus());
                     break;
             }
 
@@ -197,7 +208,15 @@ void MeshProcessingViewer::process_imgui()
         if (ImGui::Button("Implicit Smoothing"))
         {
             Scalar dt = timestep * radius_ * radius_;
-            smoother_.implicit_smoothing(dt);
+            try
+            {
+                smoother_.implicit_smoothing(dt);
+            }
+            catch (const SolverException& e)
+            {
+                std::cerr << e.what() << std::endl;
+                return;
+            }
             update_mesh();
         }
     }
@@ -224,9 +243,17 @@ void MeshProcessingViewer::process_imgui()
 
         if (ImGui::Button("Decimate it!"))
         {
-            SurfaceSimplification ss(mesh_);
-            ss.initialize(aspect_ratio, 0.0, 0.0, normal_deviation, 0.0);
-            ss.simplify(mesh_.n_vertices() * 0.01 * target_percentage);
+            try
+            {
+                SurfaceSimplification ss(mesh_);
+                ss.initialize(aspect_ratio, 0.0, 0.0, normal_deviation, 0.0);
+                ss.simplify(mesh_.n_vertices() * 0.01 * target_percentage);
+            }
+            catch (const InvalidInputException& e)
+            {
+                std::cerr << e.what() << std::endl;
+                return;
+            }
             update_mesh();
         }
     }
@@ -238,13 +265,29 @@ void MeshProcessingViewer::process_imgui()
     {
         if (ImGui::Button("Loop Subdivision"))
         {
-            SurfaceSubdivision(mesh_).loop();
+            try
+            {
+                SurfaceSubdivision(mesh_).loop();
+            }
+            catch (const InvalidInputException& e)
+            {
+                std::cerr << e.what() << std::endl;
+                return;
+            }
             update_mesh();
         }
 
         if (ImGui::Button("Sqrt(3) Subdivision"))
         {
-            SurfaceSubdivision(mesh_).sqrt3();
+            try
+            {
+                SurfaceSubdivision(mesh_).sqrt3();
+            }
+            catch (const InvalidInputException& e)
+            {
+                std::cerr << e.what() << std::endl;
+                return;
+            }
             update_mesh();
         }
 
@@ -263,10 +306,19 @@ void MeshProcessingViewer::process_imgui()
         if (ImGui::Button("Adaptive Remeshing"))
         {
             auto bb = mesh_.bounds().size();
-            SurfaceRemeshing(mesh_).adaptive_remeshing(
-                0.001 * bb,  // min length
-                1.0 * bb,    // max length
-                0.001 * bb); // approx. error
+
+            try
+            {
+                SurfaceRemeshing(mesh_).adaptive_remeshing(
+                    0.001 * bb,  // min length
+                    1.0 * bb,    // max length
+                    0.001 * bb); // approx. error
+            }
+            catch (const InvalidInputException& e)
+            {
+                std::cerr << e.what() << std::endl;
+                return;
+            }
             update_mesh();
         }
 
@@ -277,7 +329,16 @@ void MeshProcessingViewer::process_imgui()
                 l += distance(mesh_.position(mesh_.vertex(eit, 0)),
                               mesh_.position(mesh_.vertex(eit, 1)));
             l /= (Scalar)mesh_.n_edges();
-            SurfaceRemeshing(mesh_).uniform_remeshing(l);
+
+            try
+            {
+                SurfaceRemeshing(mesh_).uniform_remeshing(l);
+            }
+            catch (const InvalidInputException& e)
+            {
+                std::cerr << e.what() << std::endl;
+                return;
+            }
             update_mesh();
         }
     }
@@ -320,8 +381,16 @@ void MeshProcessingViewer::process_imgui()
             // close smallest hole
             if (hmin.is_valid())
             {
-                SurfaceHoleFilling hf(mesh_);
-                hf.fill_hole(hmin);
+                try
+                {
+                    SurfaceHoleFilling hf(mesh_);
+                    hf.fill_hole(hmin);
+                }
+                catch (const InvalidInputException& e)
+                {
+                    std::cerr << e.what() << std::endl;
+                    return;
+                }
                 update_mesh();
             }
             else

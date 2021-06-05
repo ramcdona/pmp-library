@@ -1,4 +1,4 @@
-// Copyright 2011-2019 the Polygon Mesh Processing Library developers.
+// Copyright 2011-2021 the Polygon Mesh Processing Library developers.
 // Distributed under a MIT-style license, see LICENSE.txt for details.
 
 #include <pmp/visualization/MeshViewer.h>
@@ -25,15 +25,13 @@ Viewer::Viewer(const char* title, int width, int height)
 
 bool Viewer::load_mesh(const char* filename)
 {
-    if (MeshViewer::load_mesh(filename))
-    {
-        // alloc tex coordinates
-        mesh_.vertex_property<TexCoord>("v:tex", TexCoord(0, 0));
-        update_mesh();
-        return true;
-    }
-    else
-        return false;
+    bool ok = MeshViewer::load_mesh(filename);
+
+    // alloc tex coordinates
+    mesh_.vertex_property<TexCoord>("v:tex", TexCoord(0, 0));
+    update_mesh();
+
+    return ok;
 }
 
 void Viewer::process_imgui()
@@ -49,8 +47,16 @@ void Viewer::process_imgui()
         ImGui::Spacing();
         if (ImGui::Button("Discrete Harmonic Param"))
         {
-            SurfaceParameterization param(mesh_);
-            param.harmonic();
+            try
+            {
+                SurfaceParameterization param(mesh_);
+                param.harmonic();
+            }
+            catch (const std::exception& e)
+            {
+                std::cerr << e.what() << std::endl;
+                return;
+            }
             mesh_.use_checkerboard_texture();
             set_draw_mode("Texture");
             update_mesh();
@@ -59,8 +65,16 @@ void Viewer::process_imgui()
         ImGui::Spacing();
         if (ImGui::Button("Least Squares Conformal Map"))
         {
-            SurfaceParameterization param(mesh_);
-            param.lscm();
+            try
+            {
+                SurfaceParameterization param(mesh_);
+                param.lscm();
+            }
+            catch (const std::exception& e)
+            {
+                std::cerr << e.what() << std::endl;
+                return;
+            }
             mesh_.use_checkerboard_texture();
             set_draw_mode("Texture");
             update_mesh();
