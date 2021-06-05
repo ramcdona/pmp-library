@@ -149,7 +149,7 @@ int main(int argc, char **argv)
             std::cout << "-----------------------------------------------\n";
             std::cout << "Curvature: Hex sphere\n";
             mesh.read("../data/unit-sphere.off");
-            dualize(mesh);
+            dual(mesh);
             normalize(mesh);
             test_curvatures(mesh);
         }
