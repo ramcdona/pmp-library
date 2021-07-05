@@ -16,11 +16,10 @@
 
 using namespace pmp;
 
-bool Viewer::load_mesh(const char* filename)
+void Viewer::load_mesh(const char* filename)
 {
-    bool success = MeshViewer::load_mesh(filename);
+    MeshViewer::load_mesh(filename);
     set_draw_mode("Hidden Line");
-    return success;
 }
 
 void Viewer::process_imgui()

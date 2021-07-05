@@ -17,7 +17,7 @@ public:
         add_help_item("Shift + MMB", "Geod. distances for selected vertex", 5);
     }
 
-    virtual bool load_mesh(const char* filename) override;
+    virtual void load_mesh(const char* filename) override;
 
 protected:
     virtual void process_imgui() override;
