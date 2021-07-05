@@ -6,7 +6,7 @@
 #include "pmp/algorithms/PolyDiffGeo.h"
 #include <cfloat>
 
-GeodesicsInHeat::GeodesicsInHeat(SurfaceMesh &mesh) : mesh_(mesh)
+GeodesicsInHeat::GeodesicsInHeat(SurfaceMesh& mesh) : mesh_(mesh)
 {
     mesh_.add_face_property<Point>("f:point");
     mesh_.add_face_property<Eigen::VectorXd>("f:weights");
@@ -64,7 +64,7 @@ void GeodesicsInHeat::compute_distance_from(Vertex source)
     // normalize distance gradients
     for (int i = 0; i < grad.rows(); i += 3)
     {
-        dvec3 &g = *reinterpret_cast<dvec3 *>(&grad[i]);
+        dvec3& g = *reinterpret_cast<dvec3*>(&grad[i]);
         double n = norm(g);
         if (n > DBL_MIN)
             g /= n;

@@ -13,7 +13,7 @@ class GeodesicsInHeat
 {
 public:
     // construct with mesh
-    GeodesicsInHeat(SurfaceMesh &mesh);
+    GeodesicsInHeat(SurfaceMesh& mesh);
 
     // destructor: cleans up allocated properties
     ~GeodesicsInHeat();
@@ -38,7 +38,7 @@ private:
     double avg_edge_length() const;
 
 private:
-    SurfaceMesh &mesh_;
+    SurfaceMesh& mesh_;
     VertexProperty<Scalar> distance_;
 
     Eigen::SparseMatrix<double> divergence_, gradient_;

@@ -16,7 +16,7 @@
 
 using namespace pmp;
 
-bool Viewer::load_mesh(const char *filename)
+bool Viewer::load_mesh(const char* filename)
 {
     bool success = MeshViewer::load_mesh(filename);
     set_draw_mode("Hidden Line");
@@ -111,7 +111,7 @@ void Viewer::process_imgui()
     }
 }
 
-void Viewer::draw(const std::string &draw_mode)
+void Viewer::draw(const std::string& draw_mode)
 {
     // normal mesh draw
     mesh_.draw(projection_matrix_, modelview_matrix_, draw_mode);

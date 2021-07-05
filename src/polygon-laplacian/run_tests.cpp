@@ -15,7 +15,7 @@ using namespace pmp;
 
 // normalize all vertex position to norm=1.
 // used to turn an almost spherical mesh into a spherical mesh.
-void normalize(SurfaceMesh &mesh)
+void normalize(SurfaceMesh& mesh)
 {
     for (auto v : mesh.vertices())
     {
@@ -25,7 +25,7 @@ void normalize(SurfaceMesh &mesh)
 
 // compute curvature on a spherical mesh.
 // compare to ground truth, i.e., 1
-void test_curvatures(SurfaceMesh &mesh)
+void test_curvatures(SurfaceMesh& mesh)
 {
     Curvature curvature(mesh);
     curvature.compute();
@@ -44,7 +44,7 @@ void test_curvatures(SurfaceMesh &mesh)
 
 // compute geodesic distances from vertex 0 on a planar mesh.
 // compare to ground truth, i.e., Euclidean distance.
-void test_geodesics(SurfaceMesh &mesh)
+void test_geodesics(SurfaceMesh& mesh)
 {
     Vertex source(0);
     const Point p = mesh.position(source);
@@ -132,7 +132,7 @@ void timing_solution(SurfaceMesh mesh)
     std::cout << "back-substitution: " << t.elapsed() / trials << "ms\n";
 }
 
-int main(int argc, char **argv)
+int main(int argc, char** argv)
 {
     SurfaceMesh mesh;
 

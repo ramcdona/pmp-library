@@ -33,7 +33,7 @@ public:
     static bool is_at_least(int major, int minor, int patch);
 
     //! return true if the named feature is available in this version
-    static bool has_feature(const std::string &name);
+    static bool has_feature(const std::string& name);
 };
 
 } // namespace pmp

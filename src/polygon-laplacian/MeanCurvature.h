@@ -12,7 +12,7 @@ class Curvature
 {
 public:
     // construct with mesh
-    Curvature(SurfaceMesh &mesh);
+    Curvature(SurfaceMesh& mesh);
 
     // destructor (deletes vertex property "v:curv")
     ~Curvature();
@@ -32,6 +32,6 @@ public:
     void curvature_to_texture_coordinates() const;
 
 private:
-    SurfaceMesh &mesh_;
+    SurfaceMesh& mesh_;
     VertexProperty<Scalar> curvatures_;
 };

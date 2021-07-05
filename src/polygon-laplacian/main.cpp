@@ -4,7 +4,7 @@
 
 #include "Viewer.h"
 
-int main(int argc, char **argv)
+int main(int argc, char** argv)
 {
     Viewer window("Polygon Laplacian", 800, 600);
 
