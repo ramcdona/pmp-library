@@ -1,4 +1,4 @@
-// Copyright 2011-2020 the Polygon Mesh Processing Library developers.
+// Copyright 2011-2022 the Polygon Mesh Processing Library developers.
 // Distributed under a MIT-style license, see LICENSE.txt for details.
 
 #include "pmp/algorithms/SurfaceSubdivision.h"
@@ -342,92 +342,17 @@ void SurfaceSubdivision::loop()
     mesh_.remove_edge_property(epoint);
 }
 
-void SurfaceSubdivision::sqrt3()
-{
-    if (!mesh_.is_triangle_mesh())
-    {
-        auto what = "SurfaceSubdivision: Not a triangle mesh.";
-        throw InvalidInputException(what);
-    }
-
-    // reserve memory
-    int nv = mesh_.n_vertices();
-    int ne = mesh_.n_edges();
-    int nf = mesh_.n_faces();
-    mesh_.reserve(nv + nf, ne + 3 * nf, 3 * nf);
-
-    auto points = mesh_.vertex_property<Point>("v:point");
-
-    // remember end of old vertices and edges
-    auto vend = mesh_.vertices_end();
-    auto eend = mesh_.edges_end();
-
-    // compute new positions of old vertices
-    auto new_pos = mesh_.add_vertex_property<Point>("v:np");
-    for (auto v : mesh_.vertices())
-    {
-        if (!mesh_.is_boundary(v))
-        {
-            Scalar n = mesh_.valence(v);
-            Scalar alpha = (4.0 - 2.0 * std::cos(2.0 * M_PI / n)) / 9.0;
-            Point p(0, 0, 0);
-
-            for (auto vv : mesh_.vertices(v))
-                p += points_[vv];
-
-            p = (1.0f - alpha) * points_[v] + alpha / n * p;
-            new_pos[v] = p;
-        }
-    }
-
-    // split faces
-    for (auto f : mesh_.faces())
-    {
-        Point p(0, 0, 0);
-        Scalar c(0);
-
-        for (auto fv : mesh_.vertices(f))
-        {
-            p += points_[fv];
-            ++c;
-        }
-
-        p /= c;
-
-        mesh_.split(f, p);
-    }
-
-    // set new positions of old vertices
-    for (auto vit = mesh_.vertices_begin(); vit != vend; ++vit)
-    {
-        if (!mesh_.is_boundary(*vit))
-        {
-            points[*vit] = new_pos[*vit];
-        }
-    }
-
-    mesh_.remove_vertex_property(new_pos);
-
-    // flip old edges
-    for (auto eit = mesh_.edges_begin(); eit != eend; ++eit)
-    {
-        if (mesh_.is_flip_ok(*eit))
-        {
-            mesh_.flip(*eit);
-        }
-    }
-}
-
 void SurfaceSubdivision::quad_tri()
 {
     // split each edge evenly into two parts
-    for (Edge e : mesh_.edges())
+    for (auto e : mesh_.edges())
     {
-        mesh_.insert_vertex(e, 0.5f * (points_[mesh_.vertex(e, 0)] + points_[mesh_.vertex(e, 1)]));
+        mesh_.insert_vertex(e, 0.5f * (points_[mesh_.vertex(e, 0)] +
+                                       points_[mesh_.vertex(e, 1)]));
     }
 
     // subdivide faces without repositioning
-    for (Face f : mesh_.faces())
+    for (auto f : mesh_.faces())
     {
         size_t f_val = mesh_.valence(f) / 2;
         if (f_val == 3)
@@ -453,25 +378,28 @@ void SurfaceSubdivision::quad_tri()
             h1 = mesh_.insert_edge(h0, h1);
             mesh_.insert_vertex(mesh_.edge(h1), centroid(mesh_, f));
 
-            auto h = mesh_.next_halfedge(mesh_.next_halfedge(mesh_.next_halfedge(h1)));
+            auto h = mesh_.next_halfedge(
+                mesh_.next_halfedge(mesh_.next_halfedge(h1)));
             while (h != h0)
             {
                 mesh_.insert_edge(h1, h);
-                h = mesh_.next_halfedge(mesh_.next_halfedge(mesh_.next_halfedge(h1)));
+                h = mesh_.next_halfedge(
+                    mesh_.next_halfedge(mesh_.next_halfedge(h1)));
             }
         }
     }
 
-    auto new_pos = mesh_.add_vertex_property<Point>("quad_tri:new_position", Point(0));
+    auto new_pos =
+        mesh_.add_vertex_property<Point>("quad_tri:new_position", Point(0));
 
-    for (Vertex v : mesh_.vertices())
+    for (auto v : mesh_.vertices())
     {
         if (mesh_.is_boundary(v))
         {
             new_pos[v] = 0.5 * points_[v];
 
             // add neighbouring vertices on boundary
-            for (Vertex vv : mesh_.vertices(v))
+            for (auto vv : mesh_.vertices(v))
             {
                 if (mesh_.is_boundary(vv))
                 {
@@ -483,7 +411,7 @@ void SurfaceSubdivision::quad_tri()
         {
             // count the number of faces and quads surrounding the vertex
             int n_faces = 0, n_quads = 0;
-            for (Face f : mesh_.faces(v))
+            for (auto f : mesh_.faces(v))
             {
                 n_faces++;
                 n_quads += mesh_.valence(f) == 4;
@@ -492,11 +420,14 @@ void SurfaceSubdivision::quad_tri()
             if (n_quads == 0)
             {
                 // vertex is surrounded only by triangles
-                double a = 2.0 * pow(3.0 / 8.0 + (std::cos(2.0 * M_PI / n_faces) - 1.0) / 4.0, 2.0);
+                double a =
+                    2.0 * pow(3.0 / 8.0 +
+                                  (std::cos(2.0 * M_PI / n_faces) - 1.0) / 4.0,
+                              2.0);
                 double b = (1.0 - a) / n_faces;
 
                 new_pos[v] = a * points_[v];
-                for (Vertex vv : mesh_.vertices(v))
+                for (auto vv : mesh_.vertices(v))
                 {
                     new_pos[v] += b * points_[vv];
                 }
@@ -509,10 +440,11 @@ void SurfaceSubdivision::quad_tri()
                 double e = 1.0 / pow(n_faces, 2.0);
 
                 new_pos[v] = c * points_[v];
-                for (Halfedge h : mesh_.halfedges(v))
+                for (auto h : mesh_.halfedges(v))
                 {
                     new_pos[v] += d * points_[mesh_.to_vertex(h)];
-                    new_pos[v] += e * points_[mesh_.to_vertex(mesh_.next_halfedge(h))];
+                    new_pos[v] +=
+                        e * points_[mesh_.to_vertex(mesh_.next_halfedge(h))];
                 }
             }
             else
@@ -523,12 +455,14 @@ void SurfaceSubdivision::quad_tri()
                 double gamma = 0.25 * alpha;
 
                 new_pos[v] = alpha * points_[v];
-                for (Halfedge h : mesh_.halfedges(v))
+                for (auto h : mesh_.halfedges(v))
                 {
                     new_pos[v] += beta * points_[mesh_.to_vertex(h)];
                     if (mesh_.valence(mesh_.face(h)) == 4)
                     {
-                        new_pos[v] += gamma * points_[mesh_.to_vertex(mesh_.next_halfedge(h))];
+                        new_pos[v] +=
+                            gamma *
+                            points_[mesh_.to_vertex(mesh_.next_halfedge(h))];
                     }
                 }
             }
@@ -536,7 +470,7 @@ void SurfaceSubdivision::quad_tri()
     }
 
     // apply new positions to the mesh
-    for (Vertex v : mesh_.vertices())
+    for (auto v : mesh_.vertices())
     {
         points_[v] = new_pos[v];
     }

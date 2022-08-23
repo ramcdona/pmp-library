@@ -1,25 +1,28 @@
-// Copyright 2011-2021 the Polygon Mesh Processing Library developers.
+// Copyright 2011-2022 the Polygon Mesh Processing Library developers.
 // Distributed under a MIT-style license, see LICENSE.txt for details.
 
 #include "MeshProcessingViewer.h"
 
-#include <pmp/algorithms/SurfaceSubdivision.h>
-#include <pmp/algorithms/SurfaceFeatures.h>
-#include <pmp/algorithms/SurfaceSimplification.h>
-#include <pmp/algorithms/SurfaceFairing.h>
-#include <pmp/algorithms/SurfaceRemeshing.h>
+#include <pmp/algorithms/DifferentialGeometry.h>
 #include <pmp/algorithms/SurfaceCurvature.h>
+#include <pmp/algorithms/SurfaceFactory.h>
+#include <pmp/algorithms/SurfaceFairing.h>
+#include <pmp/algorithms/SurfaceFeatures.h>
 #include <pmp/algorithms/SurfaceGeodesic.h>
 #include <pmp/algorithms/SurfaceHoleFilling.h>
-#include <pmp/algorithms/SurfaceFactory.h>
+#include <pmp/algorithms/SurfaceRemeshing.h>
+#include <pmp/algorithms/SurfaceSimplification.h>
+#include <pmp/algorithms/SurfaceSmoothing.h>
+#include <pmp/algorithms/SurfaceSubdivision.h>
 #include <pmp/algorithms/SurfaceTriangulation.h>
-#include <pmp/algorithms/DifferentialGeometry.h>
 
 #include <imgui.h>
 
+using namespace pmp;
+
 MeshProcessingViewer::MeshProcessingViewer(const char* title, int width,
                                            int height)
-    : MeshViewer(title, width, height), smoother_(mesh_)
+    : MeshViewer(title, width, height)
 {
     // add help items
     add_help_item("O", "Flip mesh orientation", 5);
@@ -208,7 +211,7 @@ void MeshProcessingViewer::process_imgui()
 
         if (ImGui::Button("Explicit Smoothing"))
         {
-            smoother_.explicit_smoothing(iterations);
+            SurfaceSmoothing(mesh_).explicit_smoothing(iterations);
             update_mesh();
         }
 
@@ -226,7 +229,7 @@ void MeshProcessingViewer::process_imgui()
             Scalar dt = timestep * radius_ * radius_;
             try
             {
-                smoother_.implicit_smoothing(dt);
+                SurfaceSmoothing(mesh_).implicit_smoothing(dt);
             }
             catch (const SolverException& e)
             {
@@ -257,12 +260,18 @@ void MeshProcessingViewer::process_imgui()
         ImGui::SliderInt("Aspect Ratio", &aspect_ratio, 1, 10);
         ImGui::PopItemWidth();
 
+        static int seam_angle_deviation = 1;
+        ImGui::PushItemWidth(100);
+        ImGui::SliderInt("Seam Angle Deviation", &seam_angle_deviation, 0, 15);
+        ImGui::PopItemWidth();
+
         if (ImGui::Button("Decimate it!"))
         {
             try
             {
                 SurfaceSimplification ss(mesh_);
-                ss.initialize(aspect_ratio, 0.0, 0.0, normal_deviation, 0.0);
+                ss.initialize(aspect_ratio, 0.0, 0.0, normal_deviation, 0.0,
+                              0.01, seam_angle_deviation);
                 ss.simplify(mesh_.n_vertices() * 0.01 * target_percentage);
             }
             catch (const InvalidInputException& e)
@@ -293,17 +302,9 @@ void MeshProcessingViewer::process_imgui()
             update_mesh();
         }
 
-        if (ImGui::Button("Sqrt(3) Subdivision"))
+        if (ImGui::Button("Quad-Tri Subdivision"))
         {
-            try
-            {
-                SurfaceSubdivision(mesh_).sqrt3();
-            }
-            catch (const InvalidInputException& e)
-            {
-                std::cerr << e.what() << std::endl;
-                return;
-            }
+            SurfaceSubdivision(mesh_).quad_tri();
             update_mesh();
         }
 

@@ -4,10 +4,11 @@
 #pragma once
 
 #include "pmp/SurfaceMesh.h"
+#include "pmp/algorithms/TriangleKdTree.h"
+
+#include <memory>
 
 namespace pmp {
-
-class TriangleKdTree;
 
 //! \brief A class for uniform and adaptive surface remeshing.
 //! \details The algorithm implemented here performs incremental remeshing based
@@ -22,9 +23,6 @@ public:
     //! \pre Input mesh needs to be a pure triangle mesh.
     //! \throw InvalidInputException if the input precondition is violated.
     SurfaceRemeshing(SurfaceMesh& mesh);
-
-    // destructor
-    ~SurfaceRemeshing();
 
     //! \brief Perform uniform remeshing.
     //! \param edge_length the target edge length.
@@ -69,12 +67,11 @@ private:
                4.0 / 5.0 * std::min(vsizing_[v0], vsizing_[v1]);
     }
 
-private:
     SurfaceMesh& mesh_;
-    SurfaceMesh* refmesh_;
+    std::shared_ptr<SurfaceMesh> refmesh_;
 
     bool use_projection_;
-    TriangleKdTree* kd_tree_;
+    std::unique_ptr<TriangleKdTree> kd_tree_;
 
     bool uniform_;
     Scalar target_edge_length_;
@@ -82,6 +79,8 @@ private:
     Scalar max_edge_length_;
     Scalar approx_error_;
 
+    bool has_feature_vertices_{false};
+    bool has_feature_edges_{false};
     VertexProperty<Point> points_;
     VertexProperty<Point> vnormal_;
     VertexProperty<bool> vfeature_;

@@ -14,6 +14,8 @@ class SurfaceSmoothing
 {
 public:
     //! Construct with mesh to be smoothed.
+    //! \pre \p mesh is not empty
+    //! \throw InvalidInputException if \p mesh is empty
     SurfaceSmoothing(SurfaceMesh& mesh);
 
     // destructor
@@ -41,14 +43,12 @@ public:
     }
 
 private:
-    //! Initialize cotan/uniform Laplace weights.
+    // Initialize cotan/uniform Laplace weights.
     void compute_edge_weights(bool use_uniform_laplace);
 
-    //! Initialize cotan/uniform Laplace weights.
+    // Initialize cotan/uniform Laplace weights.
     void compute_vertex_weights(bool use_uniform_laplace);
 
-private:
-    //! the mesh
     SurfaceMesh& mesh_;
 
     // remember for how many vertices/edges we computed weights

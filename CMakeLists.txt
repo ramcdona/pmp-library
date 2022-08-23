@@ -1,5 +1,9 @@
 cmake_policy(SET CMP0048 NEW)
-project(pmp-library VERSION 1.2.1)
+project(
+  pmp-library
+  VERSION 1.2.1
+  DESCRIPTION "The Polygon Mesh Processing Library"
+  HOMEPAGE_URL "https://www.pmp-library.org")
 cmake_minimum_required(VERSION 3.16.3)
 cmake_policy(SET CMP0072 NEW)
 
@@ -102,9 +106,10 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug"
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
 endif()
 
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 if((UNIX OR APPLE) AND CMAKE_COMPILER_IS_GNUCXX)
   set(CMAKE_CXX_FLAGS
@@ -122,6 +127,9 @@ if(WIN32)
   set(CMAKE_CXX_FLAGS
       "${CMAKE_CXX_FLAGS} -D_USE_MATH_DEFINES -DNOMINMAX -D_CRT_SECURE_NO_WARNINGS"
   )
+endif()
+
+if(MSVC)
   add_compile_options(/wd4267) # conversion from size_t
   add_compile_options(/wd4244) # conversion from double to float
   add_compile_options(/wd4305) # truncation from double to float

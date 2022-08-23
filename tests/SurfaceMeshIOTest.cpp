@@ -5,6 +5,7 @@
 
 #include <pmp/algorithms/SurfaceNormals.h>
 #include <vector>
+#include <fstream>
 
 using namespace pmp;
 
@@ -136,18 +137,17 @@ TEST_F(SurfaceMeshIOTest, xyz_io)
     EXPECT_EQ(mesh.n_vertices(), size_t(3));
 }
 
-TEST_F(SurfaceMeshIOTest, complex_edge)
+TEST_F(SurfaceMeshIOTest, agi_io)
 {
-    mesh.read("pmp-data/obj/cubes_complex_edge.obj");
-    EXPECT_EQ(mesh.n_vertices(), size_t(30));
-    EXPECT_EQ(mesh.n_faces(), size_t(12));
-    EXPECT_EQ(mesh.n_edges(), size_t(35));
-}
-
-TEST_F(SurfaceMeshIOTest, complex_vertex)
-{
-    mesh.read("pmp-data/obj/cubes_complex_vertex.obj");
-    EXPECT_EQ(mesh.n_vertices(), size_t(27));
-    EXPECT_EQ(mesh.n_faces(), size_t(12));
-    EXPECT_EQ(mesh.n_edges(), size_t(33));
+    // generate example data
+    std::ofstream ofs("test.agi");
+    ofs << "0 0 0 0 0 0 0 0 0" << std::endl;
+    ofs << "1 0 0 1 0 0 1 0 0" << std::endl;
+    ofs << "1 1 0 1 1 0 1 1 0" << std::endl;
+    ofs << "1 1 1 1 1 1 1 1 1" << std::endl;
+    ofs.close();
+    mesh.read("test.agi");
+    EXPECT_EQ(mesh.n_vertices(), 4u);
+    EXPECT_TRUE(mesh.has_vertex_property("v:color"));
+    EXPECT_TRUE(mesh.has_vertex_property("v:normal"));
 }
