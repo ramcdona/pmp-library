@@ -4,7 +4,6 @@
 
 #include "PolyDiffGeo.h"
 #include <pmp/algorithms/DifferentialGeometry.h>
-#include <pmp/algorithms/SurfaceTriangulation.h>
 
 namespace pmp {
 

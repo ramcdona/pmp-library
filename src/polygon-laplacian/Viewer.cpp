@@ -9,7 +9,7 @@
 
 #include <pmp/algorithms/DifferentialGeometry.h>
 #include "pmp/algorithms/PolyDiffGeo.h"
-#include <pmp/algorithms/SurfaceSubdivision.h>
+#include <pmp/algorithms/Subdivision.h>
 
 #include <imgui.h>
 #include <random>
@@ -36,7 +36,7 @@ void Viewer::process_imgui()
         // Catmull-Clark subdivision
         if (ImGui::Button("Catmull-Clark"))
         {
-            SurfaceSubdivision(mesh_).catmull_clark();
+            Subdivision(mesh_).catmull_clark();
             update_mesh();
         }
 

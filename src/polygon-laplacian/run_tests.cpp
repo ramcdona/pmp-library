@@ -5,7 +5,7 @@
 #include <pmp/SurfaceMesh.h>
 #include <pmp/algorithms/DifferentialGeometry.h>
 #include "pmp/algorithms/PolyDiffGeo.h"
-#include <pmp/algorithms/SurfaceSubdivision.h>
+#include <pmp/algorithms/Subdivision.h>
 #include <pmp/Timer.h>
 
 #include "MeanCurvature.h"
@@ -157,7 +157,7 @@ int main(int argc, char** argv)
             std::cout << "-----------------------------------------------\n";
             std::cout << "Curvature: Fine sphere\n";
             mesh.read("../data/unit-sphere.off");
-            SurfaceSubdivision(mesh).catmull_clark();
+            Subdivision(mesh).catmull_clark();
             normalize(mesh);
             test_curvatures(mesh);
         }
@@ -185,7 +185,7 @@ int main(int argc, char** argv)
             std::cout << "-----------------------------------------------\n";
             std::cout << "Geodist: Subdivided quad plane \n";
             mesh.read("../data/quad-plane.obj");
-            SurfaceSubdivision(mesh).catmull_clark();
+            Subdivision(mesh).catmull_clark();
             test_geodesics(mesh);
         }
         {
